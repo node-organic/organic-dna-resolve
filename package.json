@@ -1,0 +1,29 @@
+{
+  "name": "organic-dna-resolve",
+  "version": "0.0.1",
+  "author": "multi",
+  "description": "Shotgun for resolving DNA values",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ./node_modules/.bin/tape tests/**/*.spec.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "clone": "^1.0.2",
+    "organic-dna-branches": "0.0.2"
+  },
+  "devDependencies": {
+    "tape": "^4.2.2"
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/camplight/organic-dna-resolve.git"
+  },
+  "bugs": {
+    "url": "https://github.com/camplight/organic-dna-resolve/issues"
+  },
+  "homepage": "https://github.com/camplight/organic-dna-resolve"
+}
