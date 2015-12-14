@@ -21,7 +21,7 @@ var resolveValue = function(dna, query) {
 }
 
 var walk = function(dna, rootDNA) {
-  Object.keys(dna).forEach(function(key) {
+  for(var key in dna) {
     switch(true) {
       case re.reference.test(key):
         dna = resolveValue(rootDNA, dna[key])
@@ -46,7 +46,7 @@ var walk = function(dna, rootDNA) {
         walk(dna[key], rootDNA)
       break
     }
-  })
+  }
 
   return dna
 }
