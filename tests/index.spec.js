@@ -5,7 +5,8 @@ test('dna resolve', function(t) {
   var dna = {
     branch: {
       property: 'value',
-      PATH: '@process.env.PATH'
+      PATH: '{$PATH}',
+      substitute_path: 'test {$PATH}{$PATH}{$HOME}'
     },
     otherBranch: {
       propertyValueReference: '@branch.property',
@@ -20,6 +21,11 @@ test('dna resolve', function(t) {
   }
 
   require('../index')(dna)
+
+  t.is(dna.branch.property, 'value')
+  t.is(dna.branch.PATH, process.env.PATH)
+  t.is(dna.branch.substitute_path,
+    'test ' + process.env.PATH + process.env.PATH + process.env.HOME)
 
   dna.branch.property = 'new value'
   dna.branch.PATH = 'changed'

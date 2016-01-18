@@ -5,6 +5,6 @@
 Works with:
 - `@branch[.property]` direct references
 - `!@branch[.property]` clone referenced branche/property
-- `@process.env.*` reference process.env properties
+- `{$ENV_VAR}` reference process.env variables
 
 Example usage can be found in tests folder
