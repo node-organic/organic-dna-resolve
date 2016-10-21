@@ -17,6 +17,17 @@ test('dna resolve', function(t) {
       propertyValueReference: '!@branch.property',
       wholeBranch: '!@branch',
       array: [{'!@': 'branch'}, {'!@': 'branch.property'}]
+    },
+    selfReferenceBranch: {
+      value: 'value',
+      value2: 'value2',
+      containervalue: 'container &{value} &{value2}'
+    },
+    referencedSelfReferenceBranch: {
+      value: '@selfReferenceBranch.containervalue'
+    },
+    placeholderReference: {
+      value: '@{selfReferenceBranch.containervalue} value'
     }
   }
 
@@ -52,6 +63,15 @@ test('dna resolve', function(t) {
   t.is(dna.clonedBranch.array[1], 'value')
 
   t.is(dna.clonedBranch.wholeBranch.PATH, process.env.PATH)
+
+  //
+
+  t.is(dna.selfReferenceBranch.containervalue, 'container value value2')
+  t.is(dna.referencedSelfReferenceBranch.value, 'container value value2')
+
+  //
+
+  t.is(dna.placeholderReference.value, 'container value value2 value')
 
   //
 
