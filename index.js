@@ -21,10 +21,12 @@ var resolveValue = function(dna, query) {
   }
 }
 
+var filterMatches = function (value, index, array) {
+  return !index || value !== array[index - 1]
+}
+
 var resolveSelfReferencePlaceholders = function (dna, valueWithPlaceholdes) {
-  var matches = valueWithPlaceholdes.match(re.selfReference).sort().filter(function (value, index, array) {
-    return !index || value !== array[index - 1]
-  })
+  var matches = valueWithPlaceholdes.match(re.selfReference).sort().filter(filterMatches)
 
   for (var i in matches) {
     var match = matches[i].replace(re.selfReferenceStrip, '')
@@ -76,9 +78,7 @@ var walk = function(dna, rootDNA) {
       break
 
       case re.referencePlaceholder.test(dna[key]):
-        var matches = dna[key].match(re.referencePlaceholder).sort().filter(function (value, index, array) {
-          return !index || value !== array[index - 1]
-        })
+        var matches = dna[key].match(re.referencePlaceholder).sort().filter(filterMatches)
 
         for (var i in matches) {
           var match = matches[i].replace(re.referencePlaceholderStrip, '')
@@ -88,9 +88,7 @@ var walk = function(dna, rootDNA) {
       break
 
       case re.processEnv.test(dna[key]):
-        var matches = dna[key].match(re.processEnv).sort().filter(function (value, index, array) {
-          return !index || value !== array[index - 1]
-        })
+        var matches = dna[key].match(re.processEnv).sort().filter(filterMatches)
 
         for (var i in matches) {
           var match = matches[i].replace(re.processEnvStrip, '')
