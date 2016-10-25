@@ -6,7 +6,7 @@ var re = {
   processEnvStrip: /\$|{|}/g,
   reference: /^@[A-Za-z0-9_\-\.]+/,
   cloneReference: /^!@[A-Za-z0-9_\-\.]+/,
-  selfReference: /&\{[A-Za-z0-9_\-]+\}/g,
+  selfReference: /&\{[A-Za-z0-9_\-\.]+\}/g,
   selfReferenceStrip: /&|{|}/g,
   referencePlaceholder: /@{[A-Za-z0-9_\-\.]+\}/g,
   referencePlaceholderStrip: /@|{|}/g,
@@ -25,15 +25,13 @@ var filterMatches = function (value, index, array) {
   return !index || value !== array[index - 1]
 }
 
-var resolveSelfReferencePlaceholders = function (dna, valueWithPlaceholdes) {
+var resolveSelfReferencePlaceholders = function (dna, valueWithPlaceholdes, key) {
   var matches = valueWithPlaceholdes.match(re.selfReference).sort().filter(filterMatches)
 
   for (var i in matches) {
     var match = matches[i].replace(re.selfReferenceStrip, '')
-    if (!dna[match]) {
-      console.warn('organic-dna-resolve: ' + match + ' is not found. self referenced within dna key: ' + valueWithPlaceholdes)
-    }
-    valueWithPlaceholdes = valueWithPlaceholdes.replace(new RegExp('&{' + match + '}', 'g'), dna[match])
+    var value = resolveValue(dna, match)
+    valueWithPlaceholdes = valueWithPlaceholdes.replace(new RegExp('&{' + match + '}', 'g'), value)
   }
 
   return valueWithPlaceholdes
@@ -42,12 +40,11 @@ var resolveSelfReferencePlaceholders = function (dna, valueWithPlaceholdes) {
 var walkSelfReferences = function (dna, rootDNA) {
   for(var key in dna) {
     switch(true) {
-      case re.selfReference.test(dna[key]):
-        dna[key] = resolveSelfReferencePlaceholders(dna, dna[key])
-      break
-
       case Array.isArray(dna[key]):
         dna[key] = dna[key].map(function(item) {
+          if (typeof item === 'string' && re.selfReference.test(item)) {
+            return resolveSelfReferencePlaceholders(dna, item, key)
+          }
           return walkSelfReferences(item, rootDNA)
         })
       break
@@ -55,58 +52,81 @@ var walkSelfReferences = function (dna, rootDNA) {
       case typeof dna[key] == 'object':
         walkSelfReferences(dna[key], rootDNA)
       break
+
+      case re.selfReference.test(dna[key]):
+        dna[key] = resolveSelfReferencePlaceholders(dna, dna[key], key)
+      break
     }
   }
   return dna
 }
 
+var resolveReferencePlaceholders = function (rootDNA, item, key) {
+  switch(true) {
+
+    case re.reference.test(item):
+      return resolveValue(rootDNA, item.substr(1))
+    break
+
+    case re.cloneReference.test(item):
+      return clone(resolveValue(rootDNA, item.substr(2)))
+    break
+
+    case re.referencePlaceholder.test(item):
+      var matches = item.match(re.referencePlaceholder).sort().filter(filterMatches)
+
+      for (var i in matches) {
+        var match = matches[i].replace(re.referencePlaceholderStrip, '')
+        var value = resolveValue(rootDNA, match)
+        item = item.replace(new RegExp('@{' + match + '}', 'g'), value)
+      }
+      return item
+    break
+
+    case re.processEnv.test(item):
+      var matches = item.match(re.processEnv).sort().filter(filterMatches)
+
+      for (var i in matches) {
+        var match = matches[i].replace(re.processEnvStrip, '')
+        if (!process.env[match]) {
+          console.warn('organic-dna-resolve: process.env.' + match + ' is not defined. referenced by dna key: ' + key)
+        }
+        item = item.replace(new RegExp('{\\$' + match + '}', 'g'), process.env[match])
+      }
+      return item
+    break
+
+    default:
+      return item
+    break
+  }
+}
+
 var walk = function(dna, rootDNA) {
   for(var key in dna) {
     switch(true) {
-      case key === '@':
-        dna = resolveValue(rootDNA, dna[key])
-      break
-      case re.reference.test(dna[key]):
-        dna[key] = resolveValue(rootDNA, dna[key].substr(1))
-      break
-
-      case key === '!@':
-        dna = clone(resolveValue(rootDNA, dna[key]))
-      break
-      case re.cloneReference.test(dna[key]):
-        dna[key] = clone(resolveValue(rootDNA, dna[key].substr(2)))
-      break
-
-      case re.referencePlaceholder.test(dna[key]):
-        var matches = dna[key].match(re.referencePlaceholder).sort().filter(filterMatches)
-
-        for (var i in matches) {
-          var match = matches[i].replace(re.referencePlaceholderStrip, '')
-          var value = resolveValue(rootDNA, match)
-          dna[key] = dna[key].replace(new RegExp('@{' + match + '}', 'g'), value)
-        }
-      break
-
-      case re.processEnv.test(dna[key]):
-        var matches = dna[key].match(re.processEnv).sort().filter(filterMatches)
-
-        for (var i in matches) {
-          var match = matches[i].replace(re.processEnvStrip, '')
-          if (!process.env[match]) {
-            console.warn('organic-dna-resolve: process.env.' + match + ' is not defined. referenced by dna key: ' + key)
-          }
-          dna[key] = dna[key].replace(new RegExp('{\\$' + match + '}', 'g'), process.env[match])
-        }
-      break
-
       case Array.isArray(dna[key]):
         dna[key] = dna[key].map(function(item) {
-          return walk(item, rootDNA)
+          if (typeof item === 'string') {
+            return resolveReferencePlaceholders(rootDNA, item, key)
+          }
+          if (item['@']) {
+            return resolveValue(rootDNA, item['@'])
+          }
+          if (item['!@']) {
+            return clone(resolveValue(rootDNA, item['!@']))
+          }
+          walk(item, rootDNA)
+          return item
         })
       break
 
       case typeof dna[key] == 'object':
         walk(dna[key], rootDNA)
+      break
+
+      default:
+        dna[key] = resolveReferencePlaceholders(rootDNA, dna[key], key)
       break
     }
   }
