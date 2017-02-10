@@ -88,9 +88,6 @@ var resolveReferencePlaceholders = function (rootDNA, item, key) {
 
       for (var i in matches) {
         var match = matches[i].replace(re.processEnvStrip, '')
-        if (!process.env[match]) {
-          console.warn('organic-dna-resolve: process.env.' + match + ' is not defined. referenced by dna key: ' + key)
-        }
         item = item.replace(new RegExp('{\\$' + match + '}', 'g'), process.env[match])
       }
       return item
