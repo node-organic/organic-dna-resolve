@@ -5,6 +5,9 @@
   "description": "Shotgun for resolving DNA values",
   "main": "index.js",
   "scripts": {
+    "release-patch": "npm run test && npm version patch && npm publish && git push --tags && git push origin master",
+    "release-minor": "npm run test && npm version minor && npm publish && git push --tags && git push origin master",
+    "release-major": "npm run test && npm version major && npm publish && git push --tags && git push origin master",
     "test": "node ./node_modules/.bin/tape tests/**/*.spec.js"
   },
   "license": "MIT",
