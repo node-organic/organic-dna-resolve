@@ -1,6 +1,6 @@
 {
   "name": "organic-dna-resolve",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "multi",
   "description": "Shotgun for resolving DNA values",
   "main": "index.js",
