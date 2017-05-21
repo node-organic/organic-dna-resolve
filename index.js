@@ -12,9 +12,9 @@ var re = {
   referencePlaceholderStrip: /@|{|}/g,
 }
 
-var resolveValue = function(dna, query) {
+var resolveValue = function(dna, query, rootDNA) {
   try {
-    return selectBranch(dna, query)
+    return resolveReferencePlaceholders(rootDNA || dna, selectBranch(dna, query), query)
   } catch(e) {
     console.log(dna, query)
     throw e
@@ -25,12 +25,12 @@ var filterMatches = function (value, index, array) {
   return !index || value !== array[index - 1]
 }
 
-var resolveSelfReferencePlaceholders = function (dna, valueWithPlaceholdes, key) {
+var resolveSelfReferencePlaceholders = function (rootDNA, dna, valueWithPlaceholdes, key) {
   var matches = valueWithPlaceholdes.match(re.selfReference).sort().filter(filterMatches)
 
   for (var i in matches) {
     var match = matches[i].replace(re.selfReferenceStrip, '')
-    var value = resolveValue(dna, match)
+    var value = resolveValue(dna, match, rootDNA)
     valueWithPlaceholdes = valueWithPlaceholdes.replace(new RegExp('&{' + match + '}', 'g'), value)
   }
 
@@ -43,7 +43,7 @@ var walkSelfReferences = function (dna, rootDNA) {
       case Array.isArray(dna[key]):
         dna[key] = dna[key].map(function(item) {
           if (typeof item === 'string' && re.selfReference.test(item)) {
-            return resolveSelfReferencePlaceholders(dna, item, key)
+            return resolveSelfReferencePlaceholders(rootDNA, dna, item, key)
           }
           return walkSelfReferences(item, rootDNA)
         })
@@ -54,7 +54,7 @@ var walkSelfReferences = function (dna, rootDNA) {
       break
 
       case re.selfReference.test(dna[key]):
-        dna[key] = resolveSelfReferencePlaceholders(dna, dna[key], key)
+        dna[key] = resolveSelfReferencePlaceholders(rootDNA, dna, dna[key], key)
       break
     }
   }
