@@ -72,28 +72,24 @@ var resolveReferencePlaceholders = function (rootDNA, item, key) {
       return clone(resolveValue(rootDNA, item.substr(2)))
     break
 
-    case re.referencePlaceholder.test(item):
-      var matches = item.match(re.referencePlaceholder).sort().filter(filterMatches)
-
-      for (var i in matches) {
-        var match = matches[i].replace(re.referencePlaceholderStrip, '')
-        var value = resolveValue(rootDNA, match)
-        item = item.replace(new RegExp('@{' + match + '}', 'g'), value)
-      }
-      return item
-    break
-
-    case re.processEnv.test(item):
-      var matches = item.match(re.processEnv).sort().filter(filterMatches)
-
-      for (var i in matches) {
-        var match = matches[i].replace(re.processEnvStrip, '')
-        item = item.replace(new RegExp('{\\$' + match + '}', 'g'), process.env[match])
-      }
-      return item
-    break
-
     default:
+      if (re.referencePlaceholder.test(item)) {
+        var matches = item.match(re.referencePlaceholder).sort().filter(filterMatches)
+
+        for (var i in matches) {
+          var match = matches[i].replace(re.referencePlaceholderStrip, '')
+          var value = resolveValue(rootDNA, match)
+          item = item.replace(new RegExp('@{' + match + '}', 'g'), value)
+        }
+      }
+      if (re.processEnv.test(item)) {
+        var matches = item.match(re.processEnv).sort().filter(filterMatches)
+
+        for (var i in matches) {
+          var match = matches[i].replace(re.processEnvStrip, '')
+          item = item.replace(new RegExp('{\\$' + match + '}', 'g'), process.env[match])
+        }
+      }
       return item
     break
   }
