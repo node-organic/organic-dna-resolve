@@ -76,6 +76,8 @@ var resolveTemplateReference = function (rootDNA, query) {
   branch = walkAndResolveTemplatePlaceholders(branch, variablePairs)
   if (typeof branch === 'object') {
     walk(branch, rootDNA)
+  } else {
+    branch = resolveReferencePlaceholders(rootDNA, branch)
   }
   return branch
 }
@@ -121,6 +123,7 @@ var walkSelfReferences = function (dna, rootDNA) {
 }
 
 var resolveReferencePlaceholders = function (rootDNA, item, key) {
+  if (typeof item === 'string' && item.indexOf('<=') !== -1 && item.indexOf('=>') !== -1) return item
   switch(true) {
     
     case re.templateReference.test(item):

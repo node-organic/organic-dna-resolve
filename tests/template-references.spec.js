@@ -12,3 +12,19 @@ test('dna templated references', function(t) {
 
   t.end()
 })
+
+test('dna templated references on references', function(t) {
+  var dna = {
+    templateBranch: '@branch2.<=variable=>',
+    branch: '%templateBranch(variable=value)',
+    branch2: {
+      value: 1
+    }
+  }
+
+  require('../index')(dna)
+
+  t.is(dna.branch, 1)
+
+  t.end()
+})
