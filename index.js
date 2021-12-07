@@ -2,7 +2,7 @@ var selectBranch = require('organic-dna-branches').selectBranch
 var clone = require('clone')
 
 var re = {
-  processEnv: /{\$[A-Z_]+}/g,
+  processEnv: /{\$[a-zA-Z_]+}/g,
   processEnvStrip: /\$|{|}/g,
   reference: /^@[A-Za-z0-9_\-\.]+/,
   cloneReference: /^!@[A-Za-z0-9_\-\.]+/,
